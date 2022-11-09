@@ -12,6 +12,9 @@ To run NEMO:
 ```shell
 cd nemo/cfgs/GLOBAL_QCO/eORCA025
 ```
+```shell
+sbatch run_nemo1326_24x_v2.slurm
+```
 
 There are a few variables to set in `run_nemo1326_24x_v2.slurm`. For example, the following variables will generate a 2-hour simulation split in 1-hour jobs.
 ```bash
@@ -28,13 +31,6 @@ PARENT_IT000=0
 SCRIPTNAME=run_nemo1326_24x_v2.slurm
 # =======================================================
 ```
-Finally:
-```shell
-sbatch run_nemo1326_24x_v2.slurm
-```
-
-
-
 
 ## Setup
 ### Global eORCA025
