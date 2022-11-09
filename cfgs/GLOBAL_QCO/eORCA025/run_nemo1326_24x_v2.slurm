@@ -112,7 +112,10 @@ if [ "$ITEND" -lt "$FINAL" ] && [ "$RESUBMIT" = true ]; then
 fi
 
 # Create directories
-mkdir -p {RESTARTS,MEANS_OUT}
+mkdir -p {RESTARTS,OUTPUT}
+
+# Link nemo
+ln -fs ../BLD/bin/nemo.exe nemo
 
 module load NEMO/prg-env
 

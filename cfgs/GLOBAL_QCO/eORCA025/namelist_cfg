@@ -51,7 +51,7 @@
 /
 
 &namsbc_blk
-    cn_dir = './FORCING/',
+    cn_dir = './INPUT/JRA/',
     sn_humi = 'huss', 3, 'huss', .true., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc',
               '',
     sn_prec = 'ptot', 3, 'ptot', .true., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc',
