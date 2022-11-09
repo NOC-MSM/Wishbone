@@ -1,0 +1,1 @@
+/dssgfs01/working/atb299/NEMO_cfgs/eORCA025_RK3/BASE/sss_1m.nc

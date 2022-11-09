@@ -1,0 +1,102 @@
+#!/bin/bash
+
+WD=$PWD
+
+SYSTEM=Anemone
+
+BRANCH=main
+COMMIT=20ff578a205e66876ee2b4cc497900a3973b2bcd
+
+NEMODIR=${WD}/nemo
+STOP=0
+
+# Handle arguments
+usage() { echo "Usage: $0 [-b branch] [-c commit] [-d directory] [-s system] [-x stop_after_download]" 1>&2; exit 1; }
+while getopts ":b:c:d:s:x" o; do
+    case "${o}" in
+        b)
+            BRANCH=${OPTARG}
+            ;;
+        c)
+            COMMIT=${OPTARG}
+            ;;
+        d)
+            NEMODIR=$(realpath "${OPTARG}")
+            ;;
+        s)
+            SYSTEM=${OPTARG}
+            ;;
+        x)
+            STOP=1
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+# Check system is supported and ensure 'correct' case of $SYSTEM
+if [[ "$SYSTEM" =~ ^([aA][nN][eE][mM][oO][nN][eE])$ ]]; then
+      SYSTEM=Anemone
+    else
+      echo "System not recognised. Options are: Anemone"
+    exit
+fi
+
+
+# Download NEMO
+echo "Downloading NEMO"
+
+# Checking out from NEMO GitLab
+git clone https://forge.nemo-ocean.eu/nemo/nemo.git -b "$BRANCH" "$NEMODIR" || exit
+if [ -n "${COMMIT}" ]; then
+    cd "$NEMODIR" || exit
+    git reset --hard "$COMMIT" || exit
+    cd "$WD" || exit
+fi
+
+if [[ "$STOP" == 1 ]]; then
+    exit
+fi
+
+###########################################
+# SYSTEM
+###########################################
+# System specific options
+echo "Setting up configuration and scripts for ${SYSTEM}"
+
+echo $PWD
+
+ln -sfT compile_nemo_${SYSTEM} scripts/compile_nemo
+ln -sfT compile_tools_${SYSTEM} scripts/compile_tools
+ln -sfT mkslurm_NPD_${SYSTEM} scripts/python/mkslurm_NPD
+
+ln -sfT INPUT_${SYSTEM} data/INPUT
+
+
+# Copy
+echo "Copying customized files into ${NEMODIR}"
+cp -r "${WD}"/{arch,cfgs,data,ext,scripts,tools} "$NEMODIR"/. || exit
+
+
+###########################################
+# TOOLS
+###########################################
+# Compile tools
+echo "Compiling tools"
+cd "$NEMODIR"/tools || exit
+../scripts/compile_tools || exit
+
+###########################################
+# CONFIGURATIONS
+###########################################
+
+# Add and compile cfgs
+echo "Compiling NEMO"
+cd "$NEMODIR" || exit
+./scripts/compile_nemo || exit
+
+# Bye-Bye
+squeue -u "$USER"
+cd "$WD" || exit
