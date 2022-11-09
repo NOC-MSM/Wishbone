@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=WishB025
 #SBATCH --partition=compute
-#SBATCH --time=16:00:00
+#SBATCH --time=01:00:00
 #SBATCH --ntasks-per-core=1
 #SBATCH --ntasks-per-node=64
 #SBATCH --ntasks-per-socket=32
@@ -11,12 +11,12 @@
 # ========================================================
 # PARAMETERS TO SET
 # Restart frequency (<0 days, >0 hours)
-FREQRST=-730 #1461
+FREQRST=-1 #1461
 # Simulation length (<0 days, >0 hours)
-LENGTH=-16801   # 16071 == end of 2001
+LENGTH=-1   # 16071 == end of 2001
 # Parent initial time step (0: infer from time.step)
 # IT000 != 0 -> auto-resubmission is switched OFF
-IT000=0
+IT000=1
 # Name of this script (to resubmit)
 SCRIPTNAME=run_nemo1326_24x_v2.slurm
 # ========================================================
