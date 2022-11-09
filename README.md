@@ -1,6 +1,6 @@
-# NOC Near-Present-Day simulation
+# Wishbone configuration
 
-## Quick start on {Archer2|Anemone} ({UK National| NOC} Supercomputing Service)
+## Quick start on Anemone (NOC Supercomputing Service)
 ```shell
 git clone git@github.com:NOC-MSM/Wishbone.git -b main
 cd Wishbone
@@ -13,7 +13,7 @@ To run NEMO:
 cd nemo/cfgs/GLOBAL_QCO/eORCA025
 ```
 
-There are a few variables to set in `run_nemo.slurm`. For example, the following variables will generate a 2-hour simulation split in 1-hour jobs.
+There are a few variables to set in `run_nemo1326_24x_v2.slurm`. For example, the following variables will generate a 2-hour simulation split in 1-hour jobs.
 ```bash
 # ========================================================
 # PARAMETERS TO SET
@@ -25,12 +25,12 @@ LENGTH=2
 # PARENT_IT000 != 0 -> auto-resubmission is switched OFF
 PARENT_IT000=0
 # Name of this script (to resubmit)
-SCRIPTNAME=run_nemo-short.slurm
+SCRIPTNAME=run_nemo1326_24x_v2.slurm
 # =======================================================
 ```
 Finally:
 ```shell
-sbatch run_nemo.slurm
+sbatch run_nemo1326_24x_v2.slurm
 ```
 
 
