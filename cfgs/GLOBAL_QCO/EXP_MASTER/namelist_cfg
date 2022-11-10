@@ -6,6 +6,7 @@
 	nn_itend = CHANGEME,
     nn_date0 = 19580101,
 	ln_rstart = CHANGEME,
+        ln_reset_ts=.false.,
     nn_leapy = 1,
     nn_rstctl = 2,
 	cn_ocerst_in = 'CHANGEME',
