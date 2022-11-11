@@ -1,0 +1,1 @@
+/dssgfs01/working/atb299/NEMO_cfgs/eORCA025_RK3/BASE/weights_eORCA1_to_eORCA025_bilin.nc

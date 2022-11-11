@@ -1,0 +1,1 @@
+/dssgfs01/working/atb299/NEMO_cfgs/Wishbone/eORCA025_v4.2_bfr2d_v0.2.nc
