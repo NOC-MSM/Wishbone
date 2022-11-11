@@ -154,9 +154,9 @@
 /
 
 &namtra_eiv
-    ln_ldfeiv = .true.,
-    rn_ue = 100.0,
-    rn_le = 1.5,
+    ln_ldfeiv = .false.,
+    rn_ue = 1.5,
+    rn_le = 100.0,
     nn_aei_ijk_t = 21,
     ln_ldfeiv_dia = .true.,
 /
