@@ -24,11 +24,13 @@
 
 
 <!-- Files definition -->
+<!--
     <file_definition src="./file_def_nemo-oce_1d.xml"/>  <!--  NEMO ocean dynamics                     -->
+<!--
     <file_definition src="./file_def_nemo-oce_5d.xml"/>  <!--  NEMO ocean dynamics                     -->
     <file_definition src="./file_def_nemo-oce_M.xml"/>   <!--  NEMO ocean dynamics                     -->
     <file_definition src="./file_def_nemo-oce_Y.xml"/>   <!--  NEMO ocean dynamics                     -->
-
+<!--
     <file_definition src="./file_def_nemo-ice_5d.xml"/>  <!--  NEMO ocean sea ice                      -->
     <file_definition src="./file_def_nemo-ice_M.xml"/>   <!--  NEMO ocean sea ice                      -->
     <file_definition src="./file_def_nemo-ice_Y.xml"/>   <!--  NEMO ocean sea ice                      -->
