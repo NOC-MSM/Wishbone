@@ -35,10 +35,10 @@
 &namtsd
     cn_dir = './INPUT/',
 	ln_tsd_init = .true.,
-    sn_tem = 'conservative_temperature_WOA13_decav_Reg1L75_clim.nc', -1, 'temperature', .true., .true., 'yearly',
-             'weights_WOA13d1_2_eorca025_v4.2_bilinear.nc', '', '',
-    sn_sal = 'absolute_salinity_WOA13_decav_Reg1L75_clim.nc', -1, 'salinity', .true., .true., 'yearly',
-             'weights_WOA13d1_2_eorca025_v4.2_bilinear.nc', '', '',
+    sn_tem = 'salinity_clim', -1, 'temperature', .true., .true., 'yearly',
+             '', '', '',
+    sn_sal = 'salinity_clim', -1, 'salinity', .true., .true., 'yearly',
+             '', '', '',
 /
 
 &namsbc
@@ -86,8 +86,8 @@
     nn_sssr = 2,
     rn_deds = -33.3333333,
     cn_dir = './INPUT/',
-    sn_sss = 'sss_absolute_salinity_WOA13_decav_Reg1L75_clim.nc', -1.0, 'salinity', .true., .true., 'yearly',
-             'weights_WOA13d1_2_eorca025_v4.2_bilinear.nc', '', '',
+    sn_sss = 'salinity_clim', -1.0, 'salinity', .true., .true., 'yearly',
+             '', '', '',
 /
 
 &namsbc_rnf
