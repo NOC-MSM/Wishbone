@@ -159,6 +159,7 @@
     rn_le = 100.0,
     nn_aei_ijk_t = 21,
     ln_ldfeiv_dia = .true.,
+    nn_ldfeiv_shape = 2
 /
 
 &namdyn_adv

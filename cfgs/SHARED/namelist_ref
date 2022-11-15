@@ -973,6 +973,7 @@
       rn_Le        = 200.e+3        !  lateral diffusive length   [m]   (nn_aht_ijk_t= 0, 10)
       !
       ln_ldfeiv_dia =.false.,   ! diagnose eiv stream function and velocities
+      nn_ldfeiv_shape = 0           !  shape of bounding coefficient    (nn_aei_ijk_t= 21 only)
 /
 !-----------------------------------------------------------------------
 &namtra_dmp    !   tracer: T & S newtonian damping                      (default: OFF)
