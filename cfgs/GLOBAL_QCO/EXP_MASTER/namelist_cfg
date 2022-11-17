@@ -18,7 +18,7 @@
 
 &namdom
     rn_Dt = 1800.0,
-    rn_atfp = 0.03,
+    rn_atfp = 0.05,
     ln_meshmask = .false.,
 /
 
@@ -84,7 +84,7 @@
 
 &namsbc_ssr
     nn_sssr = 2,
-    rn_deds = -33.3333333,
+    rn_deds = -166.67,
     cn_dir = './INPUT/',
     sn_sss = 'sss_1m_teos10_v4.2.nc', -1, 'salinity', .true., .true., 'yearly',
              '', '', '',
@@ -149,17 +149,19 @@
 &namtra_ldf
     ln_traldf_lap = .true.,
     ln_traldf_iso = .true.,
-    ln_traldf_msc = .true.,
+    ln_traldf_msc = .false.,
     nn_aht_ijk_t = 20,
+    rn_Ud        = 0.011
 /
 
 &namtra_eiv
-    ln_ldfeiv = .false.,
+    ln_ldfeiv = .true.,
     rn_ue = 1.5,
     rn_le = 100.0,
     nn_aei_ijk_t = 21,
     ln_ldfeiv_dia = .true.,
-    nn_ldfeiv_shape = 2
+    nn_ldfeiv_shape = 2,
+
 /
 
 &namdyn_adv
