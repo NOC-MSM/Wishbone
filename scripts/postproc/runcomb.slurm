@@ -1,29 +1,29 @@
 #!/bin/bash
 #SBATCH --job-name=rebuild
 #SBATCH --time=02:20:00
-#SBATCH --account=n01-ORCHESTRA
-#SBATCH --partition=standard
-#SBATCH --qos=standard
-##SBATCH --qos=short
-
+#SBATCH --partition=compute
 #SBATCH --nodes=1
+#SBATCH --mem-per-cpu=4G
+#SBATCH --ntasks-per-core=1
+##SBATCH --ntasks-per-node=16
+##SBATCH --ntasks-per-socket=8
+#SBATCH --ntasks-per-node=32
+#SBATCH --ntasks-per-socket=16
 
-module swap craype-network-ofi craype-network-ucx
-module swap cray-mpich cray-mpich-ucx
-module load cray-hdf5-parallel/1.12.0.7
-module load cray-netcdf-hdf5parallel/4.7.4.7
+module load NEMO/prg-env
 
 #############################################
-# Run rebuild_nemo on all sets of output files in the OUTPUTS directory
+# Run rebuild_nemo on all sets of output files in the OUTPUT directory
 # - Uses xargs to run N instances of rebuild_nemo in parallel "-P 16" 
 # - Note rebuild_nemo is also parallel "-p 4"
 #
 # A. Blaker 12/05/2021
 #############################################
 
-rebuild_nemo='/work/n01/n01/atb299/TOOLS/tools/REBUILD_NEMO/BLD/bin/rebuild_nemo'
+export I_MPI_SHM=icx
+echo "I_MPI_SHM = " $I_MPI_SHM
+export OMP_NUM_THREADS=4
 
-export OMP_NUM_THREADS=1
 #============================
 TIME1=`date +%s`
 
@@ -32,19 +32,31 @@ if [ ! -z "$ff" ]; then
   xargs -n 1 -P 73 <<<$ff sh -c 'mv ${1} ${1%_*}.nc; rm ${1%_*}_????.nc' bash
 fi
 
-ff=`ls ../OUTPUT/*_1d*000.nc`
+ff=`ls ../OUTPUT/*_1y*000.nc`
+##     ^^^^^^^^^^^^^^^^^^^^^
+##     Change this to point to your output folder/location
 if [ ! -z "$ff" ]; then
-  xargs -n 1 -P 32 <<<$ff sh -c '/work/n01/n01/atb299/TOOLS/tools/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 48 &> `basename ${1%_*}`.rpt' bash
+  xargs -n 1 -P 8 <<<$ff sh -c '/dssgfs01/working/atb299/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 24 &> `basename ${1%_*}`.rpt' bash
+#                                                                                                     ^^
+#                                                                                Set this to match the # XIOS servers you are using
 fi
 
 ff=`ls ../OUTPUT/*_1m*000.nc`
+##     ^^^^^^^^^^^^^^^^^^^^^
+##     Change this to point to your output folder/location
 if [ ! -z "$ff" ]; then
-  xargs -n 1 -P 16 <<<$ff sh -c '/work/n01/n01/atb299/TOOLS/tools/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 48 &> `basename ${1%_*}`.rpt' bash
+  xargs -n 1 -P 8 <<<$ff sh -c '/dssgfs01/working/atb299/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 24 &> `basename ${1%_*}`.rpt' bash
+#                                                                                                     ^^
+#                                                                                Set this to match the # XIOS servers you are using
 fi
 
-ff=`ls ../OUTPUT/*_5d*000.nc`
+ff=`ls ../OUTPUT/*_1d*000.nc`
+##     ^^^^^^^^^^^^^^^^^^^^^
+##     Change this to point to your output folder/location
 if [ ! -z "$ff" ]; then
-  xargs -n 1 -P 8 <<<$ff sh -c '/work/n01/n01/atb299/TOOLS/tools/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 48 &> `basename ${1%_*}`.rpt' bash
+  xargs -n 1 -P 8 <<<$ff sh -c '/dssgfs01/working/atb299/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 24 &> `basename ${1%_*}`.rpt' bash
+#                                                                                                    ^^
+#                                                                                Set this to match the # XIOS servers you are using
 fi
 
 #============================
