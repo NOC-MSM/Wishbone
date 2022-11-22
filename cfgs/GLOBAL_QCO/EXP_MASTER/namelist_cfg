@@ -35,10 +35,10 @@
 &namtsd
     cn_dir = './INPUT/',
 	ln_tsd_init = .true.,
-    sn_tem = 'conservative_temperature_WOA13_decav_Reg1L75_clim.nc', -1, 'votemper', .true., .true., 'yearly',
-             'weights_WOA13d1_2_eorca025_v4.2_bilinear.nc', '', '',
-    sn_sal = 'absolute_salinity_WOA13_decav_Reg1L75_clim.nc', -1, 'vosaline', .true., .true., 'yearly',
-             'weights_WOA13d1_2_eorca025_v4.2_bilinear.nc', '', '',
+    sn_tem = 'EN.4.1.1.f.analysis.g10.1995-2014.eORCA025_v4.2.teos10.nc', -1, 'temperature', .true., .true., 'yearly',
+             '', '', '',
+    sn_sal = 'EN.4.1.1.f.analysis.g10.1995-2014.eORCA025_v4.2.teos10.nc', -1, 'salinity', .true., .true., 'yearly',
+             '', '', '',
 /
 
 &namsbc
@@ -53,24 +53,15 @@
 
 &namsbc_blk
     cn_dir = './INPUT/JRA/',
-    sn_humi = 'huss', 3, 'huss', .true., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc',
-              '',
-    sn_prec = 'ptot', 3, 'ptot', .true., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc',
-              '',
-    sn_qlw = 'rlds', 3, 'rlds', .false., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc',
-             '',
-    sn_qsr = 'rsds', 3, 'rsds', .false., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc',
-             '',
-    sn_slp = 'psl', 3, 'psl', .true., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc',
-             '',
-    sn_snow = 'prsn', 3, 'prsn', .true., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc',
-              '',
-    sn_tair = 'tas', 3, 'tas', .true., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc',
-              '',
-    sn_wndi = 'uas', 3, 'uas', .true., .false., 'yearly', 'weights_grid_jra_bicubic_e025_nohaloes_full.nc',
-              'Ume',
-    sn_wndj = 'vas', 3, 'vas', .true., .false., 'yearly', 'weights_grid_jra_bicubic_e025_nohaloes_full.nc',
-              'Vme',
+    sn_humi    = 'huss', 3, 'huss', .true.,  .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc', '', ''
+    sn_prec    = 'ptot', 3, 'ptot', .true.,  .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc', '', ''
+    sn_qlw     = 'rlds', 3, 'rlds', .false., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc', '', ''
+    sn_qsr     = 'rsds', 3, 'rsds', .false., .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc', '', ''
+    sn_slp     = 'psl',  3, 'psl',  .true.,  .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc', '', ''
+    sn_snow    = 'prsn', 3, 'prsn', .true.,  .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc', '', ''
+    sn_tair    = 'tas',  3, 'tas',  .true.,  .false., 'yearly', 'weights_grid_jra_bilin_e025_nohaloes_full.nc', '', ''
+    sn_wndi    = 'uas',  3, 'uas',  .true.,  .false., 'yearly', 'weights_grid_jra_bicubic_e025_nohaloes_full.nc', 'Ume', ''
+    sn_wndj    = 'vas',  3, 'vas',  .true.,  .false., 'yearly', 'weights_grid_jra_bicubic_e025_nohaloes_full.nc', 'Vme', ''
 /
 
 &namtra_qsr
@@ -92,11 +83,13 @@
 
 &namsbc_rnf
     cn_dir = './INPUT/',
-    sn_rnf = 'runoff_1m_nomask_eORCA025', -1.0, 'sornficbisf', .true., .true.,
+    sn_rnf = 'eORCA025_runoff_GO6_icb.nc', -1, 'sornficb', .true., .true.,
              'yearly', '', '', '',
-    sn_cnf = 'runoff_1m_nomask_eORCA025', 0.0, 'socoefr', .false., .true.,
+    sn_cnf = 'eORCA025_runoff_GO6_icb.nc', 0, 'socoefr', .false., .true.,
              'yearly', '', '', '',
+    sn_t_rnf='eORCA025_runoff_GO6_icb.nc',-12,'icbrnftemper',.false.,.true.,'yearly','','',''
     ln_rnf_mouth = .true.,
+    ln_rnf_tem   = .true.,
     rn_hrnf = 10.0,
     rn_avt_rnf = 0.002,
     rn_rnf_max = 0.05,
@@ -105,11 +98,11 @@
 &namisf
     ln_isf = .true.,
     ln_isfpar_mlt = .true.,
-    sn_isfpar_fwf = 'INPUT/runoff_1m_nomask_eORCA025.nc', -1, 'sofwfisf', .false.,
+    sn_isfpar_fwf = 'INPUT/eORCA025_runoff_GO6_icb.nc', -1, 'sofwfisf', .false.,
                     .true., 'yearly', '', '', '',
-    sn_isfpar_zmax = 'INPUT/runoff_1m_nomask_eORCA025.nc', -12, 'sozisfmax', .false.,
+    sn_isfpar_zmax = 'INPUT/eORCA025_runoff_GO6_icb.nc', -12, 'sozisfmax', .false.,
                      .true., 'yearly', '', '', '',
-    sn_isfpar_zmin = 'INPUT/runoff_1m_nomask_eORCA025.nc', -12, 'sozisfmin', .false.,
+    sn_isfpar_zmin = 'INPUT/eORCA025_runoff_GO6_icb.nc', -12, 'sozisfmin', .false.,
                      .true., 'yearly', '', '', '',
 /
 

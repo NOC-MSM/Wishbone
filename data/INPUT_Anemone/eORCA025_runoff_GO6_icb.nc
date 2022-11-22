@@ -1,0 +1,1 @@
+/dssgfs01/working/atb299/NEMO_cfgs/Wishbone/eORCA025_runoff_GO6_icb.nc
