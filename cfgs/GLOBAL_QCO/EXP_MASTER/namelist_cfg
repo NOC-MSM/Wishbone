@@ -127,6 +127,8 @@
 
 &nambbl
     ln_trabbl = .true.,
+    nn_bbl_adv  =  1,
+
 /
 
 &nameos
