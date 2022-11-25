@@ -3,10 +3,12 @@
 #SBATCH --time=02:20:00
 #SBATCH --partition=compute
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=8G
+#SBATCH --mem-per-cpu=4G
 #SBATCH --ntasks-per-core=1
-#SBATCH --ntasks-per-node=16
-#SBATCH --ntasks-per-socket=8
+##SBATCH --ntasks-per-node=16
+##SBATCH --ntasks-per-socket=8
+#SBATCH --ntasks-per-node=32
+#SBATCH --ntasks-per-socket=16
 
 module load NEMO/prg-env
 
@@ -25,16 +27,17 @@ export OMP_NUM_THREADS=4
 #============================
 TIME1=`date +%s`
 
-#ff=`ls ../OUTPUT/*scalar*000.nc`
-#if [ ! -z "$ff" ]; then
-#  xargs -n 1 -P 73 <<<$ff sh -c 'mv ${1} ${1%_*}.nc; rm ${1%_*}_????.nc' bash
-#fi
+# This is dangerous - do not run whilst simulation is in progress
+ff=`ls ../OUTPUT/*scalar*000.nc`
+if [ ! -z "$ff" ]; then
+  xargs -n 1 -P 73 <<<$ff sh -c 'mv ${1} ${1%_*}.nc; rm ${1%_*}_????.nc' bash
+fi
 
 ff=`ls ../OUTPUT/*_1y*000.nc`
 ##     ^^^^^^^^^^^^^^^^^^^^^
 ##     Change this to point to your output folder/location
 if [ ! -z "$ff" ]; then
-  xargs -n 1 -P 4 <<<$ff sh -c '/dssgfs01/working/atb299/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 24 &> `basename ${1%_*}`.rpt' bash
+  xargs -n 1 -P 8 <<<$ff sh -c '/dssgfs01/working/atb299/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 24 &> `basename ${1%_*}`.rpt' bash
 #                                                                                                     ^^
 #                                                                                Set this to match the # XIOS servers you are using
 fi
@@ -43,16 +46,16 @@ ff=`ls ../OUTPUT/*_1m*000.nc`
 ##     ^^^^^^^^^^^^^^^^^^^^^
 ##     Change this to point to your output folder/location
 if [ ! -z "$ff" ]; then
-  xargs -n 1 -P 4 <<<$ff sh -c '/dssgfs01/working/atb299/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 24 &> `basename ${1%_*}`.rpt' bash
+  xargs -n 1 -P 8 <<<$ff sh -c '/dssgfs01/working/atb299/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 24 &> `basename ${1%_*}`.rpt' bash
 #                                                                                                     ^^
 #                                                                                Set this to match the # XIOS servers you are using
 fi
 
-ff=`ls ../OUTPUT/*_5d*000.nc`
+ff=`ls ../OUTPUT/*_1d*000.nc`
 ##     ^^^^^^^^^^^^^^^^^^^^^
 ##     Change this to point to your output folder/location
 if [ ! -z "$ff" ]; then
-  xargs -n 1 -P 4 <<<$ff sh -c '/dssgfs01/working/atb299/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 24 &> `basename ${1%_*}`.rpt' bash
+  xargs -n 1 -P 8 <<<$ff sh -c '/dssgfs01/working/atb299/REBUILD_NEMO/rebuild_nemo -p 4 -d 1 ${1%_*} 24 &> `basename ${1%_*}`.rpt' bash
 #                                                                                                    ^^
 #                                                                                Set this to match the # XIOS servers you are using
 fi
