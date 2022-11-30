@@ -690,10 +690,17 @@ CONTAINS
       DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
          zfw = MAX( ABS( 2. * omega * SIN( rad * gphit(ji,jj) ) ) , 1.e-10 )
          ! Rossby radius at w-point taken betwenn 2 km and  40km
-         zRo(ji,jj) = MAX(  2.e3 , MIN( .4 * zn(ji,jj) / zfw, 40.e3 )  )
+         zRo(ji,jj) = .4 * zn(ji,jj) / zfw
+         zRo_lim(ji,jj) = MAX(  2.e3 , MIN( zRo(ji,jj), 40.e3 )  )
+         ! zRo(ji,jj) = MAX(  2.e3 , MIN( .4 * zn(ji,jj) / zfw, 40.e3 )  )
          ! Compute aeiw by multiplying Ro^2 and T^-1
-         zaeiw(ji,jj) = zRo(ji,jj) * zRo(ji,jj) * SQRT( zah(ji,jj) / zhw(ji,jj) ) * tmask(ji,jj,1)
+         zTclinic_recip(ji,jj) = SQRT( MAX(zah(ji,jj),0._wp) / zhw(ji,jj) ) * tmask(ji,jj,1)
+         zaeiw(ji,jj) = zRo_lim(ji,jj) * zRo_lim(ji,jj) * zTclinic_recip(ji,jj) 
+         ! zaeiw(ji,jj) = zRo(ji,jj) * zRo(ji,jj) * SQRT( MAX(zah(ji,jj),0._wp) / zhw(ji,jj) ) * tmask(ji,jj,1)
       END_2D
+      CALL iom_put('RossRad',zRo)
+      CALL iom_put('RossRadlim',zRo_lim)
+      CALL iom_put('Tclinic_recip',zTclinic_recip)
 
       !                                         !==  Bound on eiv coeff.  ==!
       z1_f20 = 1._wp / (  2._wp * omega * sin( rad * 20._wp )  )
