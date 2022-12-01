@@ -13,7 +13,7 @@
 # Restart frequency (<0 days, >0 hours)
 FREQRST=-1 #1461
 # Simulation length (<0 days, >0 hours)
-LENGTH=-1   # 16071 == end of 2001
+LENGTH=-1   # -17531 == end of 2002
 # Parent initial time step (0: infer from time.step)
 # IT000 != 0 -> auto-resubmission is switched OFF
 IT000=1

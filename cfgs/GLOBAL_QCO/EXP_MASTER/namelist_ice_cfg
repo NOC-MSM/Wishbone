@@ -9,9 +9,9 @@
 
 &namalb
    !                                  !                          !  obs range (cloud-sky)
-   rn_alb_sdry      =   0.87          !  dry snow albedo         :  0.85 -- 0.87
-   rn_alb_idry      =   0.70          !  dry ice albedo          :  0.54 -- 0.65
-   rn_alb_dpnd      =   0.36          !  ponded ice albedo       :  0.10 -- 0.30 
+   rn_alb_sdry      =   0.85          !  dry snow albedo         :  0.85 -- 0.87
+   rn_alb_idry      =   0.65          !  dry ice albedo          :  0.54 -- 0.65
+   rn_alb_dpnd      =   0.27          !  ponded ice albedo       :  0.10 -- 0.30 
 /
 
 
