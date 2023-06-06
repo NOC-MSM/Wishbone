@@ -1,1 +1,0 @@
-/dssgfs01/working/atb299/NEMO_cfgs/Wishbone/sss_1m_teos10_v4.2.nc

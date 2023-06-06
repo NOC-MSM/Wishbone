@@ -1,1 +1,0 @@
-/dssgfs01/working/atb299/NEMO_cfgs/Wishbone/weights_WOA13d1_2_eorca025_v4.2_bilinear.nc
