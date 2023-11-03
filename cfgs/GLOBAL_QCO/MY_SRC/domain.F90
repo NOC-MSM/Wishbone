@@ -64,10 +64,11 @@ MODULE domain
    PUBLIC   domain_cfg   ! called by nemogcm.F90
 
    !! * Substitutions
+#  include "single_precision_substitute.h90"
 #  include "do_loop_substitute.h90"
    !!-------------------------------------------------------------------------
    !! NEMO/OCE 4.0 , NEMO Consortium (2018)
-   !! $Id: domain.F90 14547 2021-02-25 17:07:15Z techene $
+   !! $Id: domain.F90 15270 2021-09-17 14:27:55Z smasson $
    !! Software governed by the CeCILL license (see ./LICENSE)
    !!-------------------------------------------------------------------------
 CONTAINS
@@ -91,6 +92,7 @@ CONTAINS
       !
       INTEGER ::   ji, jj, jk, jt   ! dummy loop indices
       INTEGER ::   iconf = 0    ! local integers
+      REAL(wp)::   zrdt
       CHARACTER (len=64) ::   cform = "(A12, 3(A13, I7))"
       INTEGER , DIMENSION(jpi,jpj) ::   ik_top , ik_bot       ! top and bottom ocean level
       REAL(wp), DIMENSION(jpi,jpj) ::   z1_hu_0, z1_hv_0
@@ -269,10 +271,10 @@ CONTAINS
       !
       NAMELIST/namrun/ cn_ocerst_indir, cn_ocerst_outdir, nn_stocklist, ln_rst_list,                 &
          &             nn_no   , cn_exp   , cn_ocerst_in, cn_ocerst_out, ln_rstart , ln_reset_ts ,   &
-         &             nn_rstctl ,                                                                   &
+         &             ln_rstdate, nn_rstctl,                                                        &
          &             nn_it000, nn_itend , nn_date0    , nn_time0     , nn_leapy  , nn_istate ,     &
          &             nn_stock, nn_write , ln_mskland  , ln_clobber   , nn_chunksz, ln_1st_euler  , &
-         &             ln_cfmeta, ln_xios_read, nn_wxios
+         &             ln_cfmeta, ln_xios_read, nn_wxios, ln_rst_eos
       NAMELIST/namdom/ ln_linssh, rn_Dt, rn_atfp, ln_crs, ln_c1d, ln_meshmask
       NAMELIST/namtile/ ln_tile, nn_ltile_i, nn_ltile_j
 #if defined key_netcdf4
@@ -318,27 +320,8 @@ CONTAINS
       ENDIF
       !
       ! set current model timestep rDt = 2*rn_Dt if MLF or rDt = rn_Dt if RK3
-#if defined key_RK3
-      rDt   =         rn_Dt
-      r1_Dt = 1._wp / rDt
-      !
-      IF(lwp) THEN
-         WRITE(numout,*)
-         WRITE(numout,*) '           ===>>>   Runge Kutta 3rd order (RK3) :   rDt = ', rDt
-         WRITE(numout,*)
-      ENDIF
-      !
-#else
       rDt   = 2._wp * rn_Dt
       r1_Dt = 1._wp / rDt
-      !
-      IF(lwp) THEN
-         WRITE(numout,*)
-         WRITE(numout,*) '           ===>>>   Modified Leap-Frog (MLF) :   rDt = ', rDt
-         WRITE(numout,*)
-      ENDIF
-      !
-#endif
       !
       IF( l_SAS .AND. .NOT.ln_linssh ) THEN
          CALL ctl_warn( 'SAS requires linear ssh : force ln_linssh = T' )
@@ -396,9 +379,11 @@ CONTAINS
          WRITE(numout,*) '      frequency of output file        nn_write        = ', nn_write
 #endif
          WRITE(numout,*) '      mask land points                ln_mskland      = ', ln_mskland
+         WRITE(numout,*) '      date-stamp restart files        ln_rstdate      = ', ln_rstdate
          WRITE(numout,*) '      additional CF standard metadata ln_cfmeta       = ', ln_cfmeta
          WRITE(numout,*) '      overwrite an existing file      ln_clobber      = ', ln_clobber
          WRITE(numout,*) '      NetCDF chunksize (bytes)        nn_chunksz      = ', nn_chunksz
+         WRITE(numout,*) '      check restart equation of state ln_rst_eos      = ', ln_rst_eos
          IF( TRIM(Agrif_CFixed()) == '0' ) THEN
             WRITE(numout,*) '      READ restart for a single file using XIOS ln_xios_read =', ln_xios_read
             WRITE(numout,*) '      Write restart using XIOS        nn_wxios   = ', nn_wxios
@@ -423,16 +408,7 @@ CONTAINS
          IF( nn_wxios > 0 )   lwxios = .TRUE.           !* set output file type for XIOS based on NEMO namelist
          nxioso = nn_wxios
       ENDIF
-      !
-#if defined key_RK3
-      !                                        !==  RK3: Open the restart file  ==!
-      IF( ln_rstart ) THEN
-         IF(lwp) WRITE(numout,*)
-         IF(lwp) WRITE(numout,*) '   open the restart file'
-         CALL rst_read_open 
-      ENDIF
-#else
-      !                                        !==  MLF: Check consistency between ln_rstart and ln_1st_euler  ==!   (i.e. set l_1st_euler)
+      !                                        !==  Check consistency between ln_rstart and ln_1st_euler  ==!   (i.e. set l_1st_euler)
       l_1st_euler = ln_1st_euler
       !
       IF( ln_rstart ) THEN                              !*  Restart case
@@ -467,7 +443,6 @@ CONTAINS
          IF(lwp) WRITE(numout,*)'           an Euler initial time step is used : l_1st_euler is forced to .true. '
          l_1st_euler = .TRUE.
       ENDIF
-#endif
       !
       !                                        !==  control of output frequency  ==!
       !
@@ -575,12 +550,12 @@ CONTAINS
       !
       llmsk = tmask_i(:,:) == 1._wp
       !
-      CALL mpp_minloc( 'domain', glamt(:,:), llmsk, zglmin, imil )
-      CALL mpp_minloc( 'domain', gphit(:,:), llmsk, zgpmin, imip )
-      CALL mpp_minloc( 'domain',   e1t(:,:), llmsk, ze1min, imi1 )
-      CALL mpp_minloc( 'domain',   e2t(:,:), llmsk, ze2min, imi2 )
-      CALL mpp_maxloc( 'domain', glamt(:,:), llmsk, zglmax, imal )
-      CALL mpp_maxloc( 'domain', gphit(:,:), llmsk, zgpmax, imap )
+      CALL mpp_minloc( 'domain', CASTDP(glamt(:,:)), llmsk, zglmin, imil )
+      CALL mpp_minloc( 'domain', CASTDP(gphit(:,:)), llmsk, zgpmin, imip )
+      CALL mpp_minloc( 'domain',   CASTDP(e1t(:,:)), llmsk, ze1min, imi1 )
+      CALL mpp_minloc( 'domain',   CASTDP(e2t(:,:)), llmsk, ze2min, imi2 )
+      CALL mpp_maxloc( 'domain', CASTDP(glamt(:,:)), llmsk, zglmax, imal )
+      CALL mpp_maxloc( 'domain', CASTDP(gphit(:,:)), llmsk, zgpmax, imap )
       CALL mpp_maxloc( 'domain',   e1t(:,:), llmsk, ze1max, ima1 )
       CALL mpp_maxloc( 'domain',   e2t(:,:), llmsk, ze2max, ima2 )
       !

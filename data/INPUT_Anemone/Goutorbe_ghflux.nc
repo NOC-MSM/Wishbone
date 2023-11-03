@@ -1,1 +1,0 @@
-/dssgfs01/working/atb299/NEMO_cfgs/Wishbone/Goutorbe_ghflux.nc

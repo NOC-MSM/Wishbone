@@ -67,14 +67,13 @@ MODULE ldftra
    !                                    != Use/diagnose eiv =!
    LOGICAL , PUBLIC ::   ln_ldfeiv           !: eddy induced velocity flag
    LOGICAL , PUBLIC ::   ln_ldfeiv_dia       !: diagnose & output eiv streamfunction and velocity (IOM)
-   LOGICAL , PUBLIC ::   l_ldfeiv_dia        !: RK3: modified w.r.t. kstg diagnose & output eiv streamfunction and velocity flag
-
    !                                    != Coefficients =!
    INTEGER , PUBLIC ::   nn_aei_ijk_t        !: choice of time/space variation of the eiv coeff.
    REAL(wp), PUBLIC ::      rn_Ue               !: lateral diffusive velocity  [m/s]
    REAL(wp), PUBLIC ::      rn_Le               !: lateral diffusive length    [m]
    INTEGER,  PUBLIC ::   nn_ldfeiv_shape     !: shape of bounding coefficient (Treguier et al formulation only)
-   
+
+
    !                                  ! Flag to control the type of lateral diffusive operator
    INTEGER, PARAMETER, PUBLIC ::   np_ERROR  =-10   ! error in specification of lateral diffusion
    INTEGER, PARAMETER, PUBLIC ::   np_no_ldf = 00   ! without operator (i.e. no lateral diffusive trend)
@@ -100,7 +99,7 @@ MODULE ldftra
 #  include "domzgr_substitute.h90"
    !!----------------------------------------------------------------------
    !! NEMO/OCE 4.0 , NEMO Consortium (2018)
-   !! $Id: ldftra.F90 15512 2021-11-15 17:22:03Z techene $
+   !! $Id: ldftra.F90 15475 2021-11-05 14:14:45Z cdllod $
    !! Software governed by the CeCILL license (see ./LICENSE)
    !!----------------------------------------------------------------------
 CONTAINS
@@ -392,7 +391,7 @@ CONTAINS
       !!                                                   with a reduction to 0 in vicinity of the Equator
       !!    nn_aht_ijk_t = 21    ahtu, ahtv = F(i,j,  t) = F(growth rate of baroclinic instability)
       !!
-      !!                 = 31    ahtu, ahtv = F(i,j,k,t) = F(local velocity) (  |u|e  /12   laplacian operator
+      !!                 = 31    ahtu, ahtv = F(i,j,k,t) = F(local velocity) (  |u|e  / 2   laplacian operator
       !!                                                                     or |u|e^3/12 bilaplacian operator )
       !!
       !!              * time varying EIV coefficients: call to ldf_eiv routine
@@ -443,10 +442,10 @@ CONTAINS
          END DO
          !
       CASE(  31  )       !==  time varying 3D field  ==!   = F( local velocity )
-         IF( ln_traldf_lap     ) THEN          !   laplacian operator |u| e /12
+         IF( ln_traldf_lap     ) THEN          !   laplacian operator |u| e / 2
             DO jk = 1, jpkm1
-               ahtu(:,:,jk) = ABS( uu(:,:,jk,Kbb) ) * e1u(:,:) * r1_12   ! n.b. uu,vv are masked
-               ahtv(:,:,jk) = ABS( vv(:,:,jk,Kbb) ) * e2v(:,:) * r1_12
+               ahtu(:,:,jk) = ABS( uu(:,:,jk,Kbb) ) * e1u(:,:) * r1_2   ! n.b. uu,vv are masked
+               ahtv(:,:,jk) = ABS( vv(:,:,jk,Kbb) ) * e2v(:,:) * r1_2
             END DO
          ELSEIF( ln_traldf_blp ) THEN      ! bilaplacian operator      sqrt( |u| e^3 /12 ) = sqrt( |u| e /12 ) * e
             DO jk = 1, jpkm1
@@ -643,18 +642,19 @@ CONTAINS
       INTEGER  ::   ji, jj, jk    ! dummy loop indices
       REAL(wp) ::   zfw, ze3w, zn2, z1_f20, zzaei, z2_3    ! local scalars
       REAL(wp), DIMENSION(jpi,jpj) ::   zn, zah, zhw, zRo, zRo_lim, zTclinic_recip, zaeiw, zratio   ! 2D workspace
-      REAL(wp), DIMENSION(jpi,jpj,jpk) :: zmodslp ! 3D workspace
+      REAL(wp), DIMENSION(jpi,jpj,jpk) :: zmodslp ! 3D workspace 
       !!----------------------------------------------------------------------
       !
       zn (:,:) = 0._wp        ! Local initialization
-      zmodslp(:,:,:) = 0._wp
+      zmodslp(:,:,:) = 0._wp 
       zhw(:,:) = 5._wp
       zah(:,:) = 0._wp
       zRo(:,:) = 0._wp
       zRo_lim(:,:) = 0._wp
       zTclinic_recip(:,:) = 0._wp
-      zratio(:,:) = 0._wp 
-      zaeiw(:,:) = 0._wp    
+      zratio(:,:) = 0._wp
+      zaeiw(:,:) = 0._wp
+
       !                       ! Compute lateral diffusive coefficient at T-point
       IF( ln_traldf_triad ) THEN
          DO_3D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1, 1, jpk )
@@ -681,8 +681,9 @@ CONTAINS
             ! eddies using the isopycnal slopes calculated in ldfslp.F :
             ! T^-1 = sqrt(m_jpk(N^2*(r1^2+r2^2)*e3w))
             ze3w = e3w(ji,jj,jk,Kmm) * wmask(ji,jj,jk)
-            zah(ji,jj) = zah(ji,jj) + zn2 * ( wslpi(ji,jj,jk) * wslpi(ji,jj,jk)   &
-               &                            + wslpj(ji,jj,jk) * wslpj(ji,jj,jk) ) * ze3w
+            zmodslp(ji,jj,jk) =  wslpi(ji,jj,jk) * wslpi(ji,jj,jk)   &
+                     &               + wslpj(ji,jj,jk) * wslpj(ji,jj,jk)
+            zah(ji,jj) = zah(ji,jj) + zn2 * zmodslp(ji,jj,jk) * ze3w
             zhw(ji,jj) = zhw(ji,jj) + ze3w
          END_3D
       ENDIF
@@ -692,76 +693,67 @@ CONTAINS
          ! Rossby radius at w-point taken betwenn 2 km and  40km
          zRo(ji,jj) = .4 * zn(ji,jj) / zfw
          zRo_lim(ji,jj) = MAX(  2.e3 , MIN( zRo(ji,jj), 40.e3 )  )
-         ! zRo(ji,jj) = MAX(  2.e3 , MIN( .4 * zn(ji,jj) / zfw, 40.e3 )  )
          ! Compute aeiw by multiplying Ro^2 and T^-1
          zTclinic_recip(ji,jj) = SQRT( MAX(zah(ji,jj),0._wp) / zhw(ji,jj) ) * tmask(ji,jj,1)
          zaeiw(ji,jj) = zRo_lim(ji,jj) * zRo_lim(ji,jj) * zTclinic_recip(ji,jj) 
-         ! zaeiw(ji,jj) = zRo(ji,jj) * zRo(ji,jj) * SQRT( MAX(zah(ji,jj),0._wp) / zhw(ji,jj) ) * tmask(ji,jj,1)
       END_2D
+      IF( iom_use('N_2d') ) CALL iom_put('N_2d',zn(:,:)/zhw(:,:))
+      IF( iom_use('modslp') ) CALL iom_put('modslp',SQRT(zmodslp(:,:,:)) )
       CALL iom_put('RossRad',zRo)
       CALL iom_put('RossRadlim',zRo_lim)
       CALL iom_put('Tclinic_recip',zTclinic_recip)
-
       !                                         !==  Bound on eiv coeff.  ==!
       z1_f20 = 1._wp / (  2._wp * omega * sin( rad * 20._wp )  )
       z2_3 = 2._wp/3._wp
 
       SELECT CASE(nn_ldfeiv_shape)
-         CASE(0) !! Standard shape applied - decrease in tropics and cap. 
+         CASE(0) !! Standard shape applied - decrease in tropics and cap.
             DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
                zzaei = MIN( 1._wp, ABS( ff_t(ji,jj) * z1_f20 ) ) * zaeiw(ji,jj)     ! tropical decrease
-               zaeiw(ji,jj) = MIN( zzaei , paei0 )                                  ! Max value = paei0
+               zaeiw(ji,jj) = MIN( zzaei, paei0 )
             END_2D
 
          CASE(1) !! Abrupt cut-off on Rossby radius:
 ! JD : modifications here to introduce scaling by local rossby radius of deformation vs local grid scale
 ! arbitrary decision that GM is de-activated if local rossy radius larger than 2 times local grid scale
 ! based on Hallberg (2013)
-             DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
-                IF ( zRo(ji,jj) >= ( 2._wp * MIN( e1t(ji,jj), e2t(ji,jj) ) ) ) THEN
+            DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
+               IF ( zRo(ji,jj) >= ( 2._wp * MIN( e1t(ji,jj), e2t(ji,jj) ) ) ) THEN
 ! TODO : use a version of zRo that integrates over a few time steps ?
-                    zaeiw(ji,jj) = 0._wp
-                ELSE
-                    zaeiw(ji,jj) = MIN( zaeiw(ji,jj), paei0 )
-                ENDIF
+                   zaeiw(ji,jj) = 0._wp
+               ELSE
+                   zaeiw(ji,jj) = MIN( zaeiw(ji,jj), paei0 )
+               ENDIF
             END_2D
-
          CASE(2) !! Rossby radius ramp type 1:
-             DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
-                zratio(ji,jj) = zRo(ji,jj)/MIN(e1t(ji,jj),e2t(ji,jj))
-                zaeiw(ji,jj) = MIN( zaeiw(ji,jj), MAX( 0._wp, MIN( 1._wp, z2_3*(2._wp - zratio(ji,jj)) ) ) * paei0 )
+            DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
+               zratio(ji,jj) = zRo(ji,jj)/MIN(e1t(ji,jj),e2t(ji,jj))
+               zaeiw(ji,jj) = MIN( zaeiw(ji,jj), MAX( 0._wp, MIN( 1._wp, z2_3*(2._wp - zratio(ji,jj)) ) ) * paei0 )
             END_2D
             CALL iom_put('RR_GS',zratio)
-
          CASE(3) !! Rossby radius ramp type 2:
             DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
-                zratio(ji,jj) = MIN(e1t(ji,jj),e2t(ji,jj))/zRo(ji,jj)
-                zaeiw(ji,jj) = MIN( zaeiw(ji,jj), MAX( 0._wp, MIN( 1._wp, z2_3*( zratio(ji,jj) - 0.5_wp ) ) ) * paei0 )
+               zratio(ji,jj) = MIN(e1t(ji,jj),e2t(ji,jj))/zRo(ji,jj)
+               zaeiw(ji,jj) = MIN( zaeiw(ji,jj), MAX( 0._wp, MIN( 1._wp, z2_3*( zratio(ji,jj) - 0.5_wp ) ) ) * paei0 )
             END_2D
-
          CASE(4) !! bathymetry ramp:
-             DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
-                zaeiw(ji,jj) = MIN( zaeiw(ji,jj), MAX( 0._wp, MIN( 1._wp, 0.001*(ht_0(ji,jj) - 2000._wp) ) ) * paei0 )
+            DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
+               zaeiw(ji,jj) = MIN( zaeiw(ji,jj), MAX( 0._wp, MIN( 1._wp, 0.001*(ht_0(ji,jj) - 2000._wp) ) ) * paei0 )
             END_2D
-
          CASE(5) !! Rossby radius ramp type 1 applied to Treguier et al coefficient rather than cap:
                  !! Note the ramp is RR/GS=[2.0,1.0] (not [2.0,0.5] as for cases 2,3) and we ramp up 
                  !! to 5% of the Treguier et al coefficient, aiming for peak values of around 100m2/s
                  !! at high latitudes rather than 2000m2/s which is what you get in eORCA025 with an 
                  !! uncapped coefficient.
-             DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
-                zratio(ji,jj) = zRo(ji,jj)/MIN(e1t(ji,jj),e2t(ji,jj))
-                zaeiw(ji,jj) = MAX( 0._wp, MIN( 1._wp, 2._wp - zratio(ji,jj) ) ) * 0.05 * zaeiw(ji,jj)
-                zaeiw(ji,jj) = MIN( zaeiw(ji,jj), paei0 )
+            DO_2D( nn_hls-1, nn_hls-1, nn_hls-1, nn_hls-1 )
+               zratio(ji,jj) = zRo(ji,jj)/MIN(e1t(ji,jj),e2t(ji,jj))
+               zaeiw(ji,jj) = MAX( 0._wp, MIN( 1._wp, 2._wp - zratio(ji,jj) ) ) * 0.05 * zaeiw(ji,jj)
+               zaeiw(ji,jj) = MIN( zaeiw(ji,jj), paei0 )
             END_2D
             CALL iom_put('RR_GS',zratio)
-
          CASE DEFAULT
                CALL ctl_stop('ldf_eiv: Unrecognised option for nn_ldfeiv_shape.')         
-
       END SELECT
-
-
       IF( nn_hls == 1 )   CALL lbc_lnk( 'ldftra', zaeiw(:,:), 'W', 1.0_wp )   ! lateral boundary condition
       !
       DO_2D( 0, 0, 0, 0 )
@@ -802,7 +794,7 @@ CONTAINS
       CHARACTER(len=3)            , INTENT(in   ) ::   cdtype    ! =TRA or TRC (tracer indicator)
       ! TEMP: [tiling] Can be A2D(nn_hls) after all lbc_lnks removed in the nn_hls = 2 case in tra_adv_fct
       REAL(wp), DIMENSION(jpi,jpj,jpk), INTENT(inout) ::   pu        ! in : 3 ocean transport components   [m3/s]
-      REAL(wp), DIMENSION(jpi,jpj,jpk), INTENT(inout) ::   pv        ! out: 3 ocean transport components   [m3/s]
+      REAL(dp), DIMENSION(jpi,jpj,jpk), INTENT(inout) ::   pv        ! out: 3 ocean transport components   [m3/s]
       REAL(wp), DIMENSION(jpi,jpj,jpk), INTENT(inout) ::   pw        ! increased by the eiv                [m3/s]
       !!
       INTEGER  ::   ji, jj, jk                 ! dummy loop indices
@@ -840,11 +832,7 @@ CONTAINS
       END_3D
       !
       !                              ! diagnose the eddy induced velocity and associated heat transport
-#if defined key_RK3
-      IF( l_ldfeiv_dia .AND. cdtype == 'TRA' )   CALL ldf_eiv_dia( zpsi_uw, zpsi_vw, Kmm )
-#else
       IF( ln_ldfeiv_dia .AND. cdtype == 'TRA' )   CALL ldf_eiv_dia( zpsi_uw, zpsi_vw, Kmm )
-#endif
       !
     END SUBROUTINE ldf_eiv_trp
 
@@ -943,7 +931,7 @@ CONTAINS
       CALL iom_put( "veiv_heattr"  , zztmp * zw2d )                  !  heat transport in j-direction
       CALL iom_put( "veiv_heattr3d", zztmp * zw3d )                  !  heat transport in j-direction
       !
-      IF( iom_use( 'sophteiv' ) .AND. l_diaptr )   CALL dia_ptr_hst( jp_tem, 'eiv', 0.5 * zw3d )
+      IF( iom_use( 'sophteiv' ) )   CALL dia_ptr_hst( jp_tem, 'eiv', 0.5_wp * zw3d )
       !
       zztmp = 0.5_wp * 0.5
       IF( iom_use('ueiv_salttr') .OR. iom_use('ueiv_salttr3d')) THEN
@@ -967,7 +955,7 @@ CONTAINS
       CALL iom_put( "veiv_salttr"  , zztmp * zw2d )                  !  salt transport in j-direction
       CALL iom_put( "veiv_salttr3d", zztmp * zw3d )                  !  salt transport in j-direction
       !
-      IF( iom_use( 'sopsteiv' ) .AND. l_diaptr ) CALL dia_ptr_hst( jp_sal, 'eiv', 0.5 * zw3d )
+      IF( iom_use( 'sopsteiv' ) ) CALL dia_ptr_hst( jp_sal, 'eiv', 0.5_wp * zw3d )
       !
       !
    END SUBROUTINE ldf_eiv_dia

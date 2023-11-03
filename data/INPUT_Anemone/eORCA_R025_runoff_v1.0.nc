@@ -1,1 +1,0 @@
-/dssgfs01/working/atb299/NEMO_cfgs/Wishbone/eORCA_R025_runoff_v1.0.nc
